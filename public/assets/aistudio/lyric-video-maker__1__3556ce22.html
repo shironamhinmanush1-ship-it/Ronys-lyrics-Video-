@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lyric Video Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Serif+Bengali:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0c11;--panel:#17151d;--line:#2a2733;--tx:#ece8f2;--mut:#8f8a9c;--ac:#f2b266}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Noto Sans Bengali",system-ui,sans-serif;padding:16px;max-width:900px;margin-inline:auto}
+h1{font:700 22px "Noto Serif Bengali",serif;margin:4px 0 14px}
+h2{font-size:15px;margin:0 0 10px}
+.stage{background:#000;border-radius:12px;padding:8px;text-align:center}
+canvas{width:auto;height:auto;max-width:100%;max-height:62vh;border-radius:8px;cursor:pointer;background:#000}
+.bar{display:flex;gap:8px;align-items:center;margin:10px 0}
+.bar input[type=range]{flex:1;accent-color:var(--ac)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+button,select{font:inherit;background:#26232f;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+button.pri{background:var(--ac);color:#1a1206;border-color:var(--ac);font-weight:700}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+textarea,input[type=text],input[type=number]{width:100%;background:#0f0d14;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+textarea{min-height:150px;resize:vertical}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+.hint{font-size:13px;color:var(--mut);margin:6px 0 0}
+.row{display:grid;grid-template-columns:28px 1fr 30px 30px 34px 64px 34px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.row.on{background:#2a2230}
+.row span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.row button{padding:4px 0}
+.row input{padding:4px 6px}
+#list{max-height:300px;overflow:auto;margin-top:10px}
+#tap{display:none;width:100%;padding:22px;font-size:18px;margin-top:10px}
+.rec{color:#ff7b7b}
+@media(max-width:560px){.g{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>Lyric Video Maker</h1>
+
+<div class="stage"><canvas id="cv" width="1280" height="720"></canvas></div>
+<div class="bar">
+  <button id="pp" class="pri" aria-label="Play or pause">▶</button>
+  <button id="rs" aria-label="Restart">⏮</button>
+  <input type="range" id="seek" min="0" max="10" step="0.1" value="0" aria-label="Seek">
+  <span id="tm">0:00</span>
+</div>
+
+<div class="card">
+  <h2>1. Lyrics</h2>
+  <div class="g">
+    <div><label for="ttl">Song title</label><input type="text" id="ttl" value="Song title"></div>
+    <div><label for="art">Artist</label><input type="text" id="art" value="Artist name"></div>
+  </div>
+  <label for="lyr" style="margin-top:10px">One line per lyric line. Any language.</label>
+  <textarea id="lyr">এখানে আপনার লিরিক্স পেস্ট করুন
+প্রতিটি লাইন আলাদা লাইনে লিখুন
+Paste your lyrics here
+One line per lyric line</textarea>
+</div>
+
+<div class="card">
+  <h2>2. Audio</h2>
+  <input type="file" id="aud" accept="audio/*">
+  <p class="hint" id="audn">No audio yet. You can still preview without it.</p>
+</div>
+
+<div class="card">
+  <h2>3. Sync lyrics to the song</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="sync" class="pri">Tap to sync</button>
+    <button id="spread">Spread evenly</button><button id="shm">All −0.1s</button><button id="shp">All +0.1s</button>
+  </div>
+  <div class="g" style="margin-top:10px"><div><label for="spd">Sync speed (slower = more exact)</label><select id="spd"><option value="1">Normal</option><option value="0.75" selected>0.75x</option><option value="0.5">0.5x</option></select></div><div><label for="ofs">Reaction offset in seconds (taken off each tap)</label><input type="number" id="ofs" step="0.05" min="0" max="0.6" value="0.15"></div></div>
+  <p class="hint">Upload audio first. Tap to sync plays the song from the start. Press the big button (or Space) the moment each line begins. Then check each line: ▶ plays from 2s before it, ⏱ sets it to the current time, −/+ nudge 0.1s.</p>
+  <button id="tap" class="pri"></button>
+  <canvas id="wf" width="900" height="110" style="width:100%;height:auto;max-height:none;margin-top:10px"></canvas>
+  <p class="hint">Waveform shows 12 seconds around the playhead (white line). Amber ticks are line starts. Click it to jump.</p>
+  <div id="list"></div>
+</div>
+
+<div class="card">
+  <h2>4. Look</h2>
+  <div class="g">
+    <div><label for="fmt">Format</label><select id="fmt"><option value="1280x720">YouTube 16:9</option><option value="720x1280">Reels / Shorts 9:16</option><option value="1000x1000">Square 1:1</option></select></div>
+    <div><label for="thm">Theme</label><select id="thm"><option value="0">Warm night</option><option value="1">Deep ocean</option><option value="2">Rose dusk</option><option value="3">Mono</option></select></div>
+    <div><label for="fnt">Font</label><select id="fnt"><option value='"Noto Serif Bengali",Georgia,serif'>Serif</option><option value='"Noto Sans Bengali",system-ui,sans-serif'>Sans</option></select></div>
+    <div><label for="sz">Text size</label><input type="range" id="sz" min="4" max="10" step="0.25" value="6.5"></div>
+    <div><label for="bgi">Background image (optional)</label><input type="file" id="bgi" accept="image/*"></div>
+    <div><label for="rain">Rain effect</label><select id="rain"><option value="1">On</option><option value="0">Off</option></select></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>5. Export</h2>
+  <button id="exp" class="pri">Download video (MP4)</button>
+  <span id="est" class="hint"></span>
+  <p class="hint">Use the latest Chrome (Android or desktop). Keep this tab open and visible until the file downloads. The video plays through once in real time, and saves as MP4 when your browser supports it.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),c=cv.getContext('2d');
+const au=new Audio();au.preload='auto';
+let hasAudio=false,lines=[],times=[],bg=null,playing=false,vt=0,last=performance.now();
+let synced=false,syncing=false,syncIdx=0,recorder=null,ac=null,dest=null,msrc=null;
+const THEMES=[['#2e2822','#12100f','#07070a','255,190,120'],['#123447','#0a1626','#04070e','120,200,255'],['#43202f','#1b0f19','#09050a','255,140,170'],['#2a2a2a','#131313','#000','255,255,255']];
+const fmt=s=>{s=Math.max(0,s||0);return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')};
+const dur=()=>hasAudio&&isFinite(au.duration)?au.duration:Math.max(lines.length*4,10);
+const now=()=>hasAudio?au.currentTime:vt;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+
+function spread(){times=lines.map((_,i)=>+(i*dur()/Math.max(lines.length,1)).toFixed(2));renderList()}
+function parse(){
+  const nl=$('lyr').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const old=times;lines=nl;
+  times=nl.map((_,i)=>old[i]!=null?old[i]:+(i*dur()/nl.length).toFixed(2));
+  renderList();
+}
+function renderList(){
+  const l=$('list');l.innerHTML='';
+  lines.forEach((t,i)=>{
+    const r=document.createElement('div');r.className='row';r.dataset.i=i;
+    r.innerHTML='<b>'+(i+1)+'</b><span></span><button data-act="p" title="Play from 2s before">▶</button><button data-act="n" title="Set to current time">⏱</button><button data-d="-0.1">−</button><input type="number" step="0.05" min="0"><button data-d="0.1">+</button>';
+    r.children[1].textContent=t;r.children[5].value=times[i];
+    l.appendChild(r);
+  });
+  $('seek').max=dur();
+}
+$('list').addEventListener('click',e=>{
+  const r=e.target.closest('.row');if(!r)return;const i=+r.dataset.i;
+  if(e.target.dataset.act==='p'){seek(times[i]-2);play()}
+  else if(e.target.dataset.act==='n'){times[i]=+now().toFixed(2);r.children[5].value=times[i];synced=true}
+  else if(e.target.dataset.d){times[i]=Math.max(0,+(times[i]+ +e.target.dataset.d).toFixed(2));r.children[5].value=times[i];synced=true}
+  else if(e.target.tagName==='SPAN')seek(times[i]);
+});
+$('list').addEventListener('change',e=>{
+  const r=e.target.closest('.row');if(!r||e.target.tagName!=='INPUT')return;
+  times[+r.dataset.i]=Math.max(0,+e.target.value||0);synced=true;
+});
+$('lyr').addEventListener('input',parse);
+
+function play(){if(playing)return;playing=true;last=performance.now();if(hasAudio){au.playbackRate=syncing?+$('spd').value:1;au.play()}$('pp').textContent='⏸'}
+function pause(){playing=false;if(hasAudio)au.pause();$('pp').textContent='▶'}
+function seek(t){t=clamp(t,0,dur());if(hasAudio)au.currentTime=t;vt=t}
+function end(){
+  pause();au.playbackRate=1;
+  if(syncing){syncing=false;$('tap').style.display='none';synced=true}
+  if(recorder){const r=recorder;recorder=null;setTimeout(()=>r.stop(),800)}
+}
+$('pp').onclick=()=>playing?pause():play();
+cv.onclick=()=>playing?pause():play();
+$('rs').onclick=()=>seek(0);
+$('seek').oninput=e=>seek(+e.target.value);
+au.onended=end;
+au.onloadedmetadata=()=>{if(!synced)spread();$('seek').max=dur()};
+
+$('aud').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  au.src=URL.createObjectURL(f);hasAudio=true;pause();
+  $('audn').textContent='Loaded: '+f.name;buildPeaks(f);
+};
+$('bgi').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const im=new Image();im.onload=()=>bg=im;im.src=URL.createObjectURL(f);
+};
+$('fmt').onchange=e=>{const[w,h]=e.target.value.split('x');cv.width=+w;cv.height=+h;initRain()};
+$('spread').onclick=()=>{synced=false;spread()};
+
+$('sync').onclick=()=>{
+  if(!lines.length)return;
+  if(!hasAudio){alert('Upload your audio first.');return}
+  syncing=true;syncIdx=0;seek(0);play();
+  $('tap').style.display='block';updTap();
+};
+function updTap(){$('tap').textContent='TAP: '+(lines[syncIdx]||'')}
+function tap(){
+  if(!syncing)return;
+  times[syncIdx]=Math.max(0,+(now()-(+$('ofs').value||0)*au.playbackRate).toFixed(2));syncIdx++;renderList();
+  if(syncIdx>=lines.length){syncing=false;synced=true;au.playbackRate=1;$('tap').style.display='none'}else updTap();
+}
+$('tap').onclick=tap;
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&syncing&&!['TEXTAREA','INPUT'].includes(document.activeElement.tagName)){e.preventDefault();tap()}
+});
+
+/* ---------- drawing ---------- */
+let drops=[];
+function initRain(){drops=Array.from({length:130},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,l:12+Math.random()*26,v:9+Math.random()*10}))}
+initRain();
+
+function wrap(t,mw){
+  const w=t.split(/\s+/),o=[];let l='';
+  for(const x of w){const n=l?l+' '+x:x;if(c.measureText(n).width>mw&&l){o.push(l);l=x}else l=n}
+  o.push(l);return o;
+}
+function curIdx(t){
+  if(syncing)return syncIdx-1;
+  let a=-1;for(let i=0;i<lines.length;i++)if(times[i]<=t)a=i;return a;
+}
+function text(ls,cx,cy,lh,alpha,glow,col){
+  c.globalAlpha=alpha;c.fillStyle=col;c.shadowColor=glow;c.shadowBlur=glow?28:0;
+  const top=cy-(ls.length-1)*lh/2;
+  ls.forEach((s,i)=>c.fillText(s,cx,top+i*lh));
+  c.shadowBlur=0;c.globalAlpha=1;
+}
+function draw(){
+  const W=cv.width,H=cv.height,t=now(),th=THEMES[+$('thm').value],ff=$('fnt').value;
+  /* background */
+  if(bg){
+    const s=Math.max(W/bg.width,H/bg.height);
+    c.drawImage(bg,(W-bg.width*s)/2,(H-bg.height*s)/2,bg.width*s,bg.height*s);
+    c.fillStyle='rgba(0,0,0,.58)';c.fillRect(0,0,W,H);
+  }else{
+    const g=c.createRadialGradient(W*.3,H*.2,0,W/2,H/2,Math.max(W,H)*.85);
+    g.addColorStop(0,th[0]);g.addColorStop(.55,th[1]);g.addColorStop(1,th[2]);
+    c.fillStyle=g;c.fillRect(0,0,W,H);
+  }
+  const vg=c.createLinearGradient(0,H*.55,0,H);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.6)');
+  c.fillStyle=vg;c.fillRect(0,0,W,H);
+  /* rain */
+  if($('rain').value==='1'){
+    c.strokeStyle='rgba(255,255,255,.14)';c.lineWidth=1.2;c.beginPath();
+    for(const d of drops){
+      c.moveTo(d.x,d.y);c.lineTo(d.x-d.l*.12,d.y+d.l);
+      if(playing){d.y+=d.v;if(d.y>H){d.y=-d.l;d.x=Math.random()*W}}
+    }
+    c.stroke();
+  }
+  /* text */
+  const S=Math.round(Math.min(W,H)*(+$('sz').value/100)),mw=W*.84,glow='rgba('+th[3]+',.55)';
+  c.textAlign='center';c.textBaseline='middle';
+  const a=curIdx(t);
+  if(a<0){
+    c.font='700 '+Math.round(S*1.25)+'px '+ff;
+    const tl=wrap($('ttl').value,mw);text(tl,W/2,H/2-S*.4,S*1.8,1,glow,'#fff');
+    c.font='400 '+Math.round(S*.62)+'px '+ff;
+    text([$('art').value],W/2,H/2+tl.length*S*.9+S*.5,S,.6,'','#fff');
+  }else{
+    const p=clamp((t-times[a])/.45,0,1),e=1-Math.pow(1-p,3);
+    c.font='700 '+S+'px '+ff;
+    const cl=wrap(lines[a],mw),lh=S*1.5,ch=cl.length*lh;
+    text(cl,W/2,H/2+(1-e)*S*.5,lh,e,glow,'#fff');
+    const ss=Math.round(S*.6);c.font='400 '+ss+'px '+ff;const sl=ss*1.5;
+    if(a>0){const pl=wrap(lines[a-1],mw);text(pl,W/2,H/2-ch/2-S*.6-pl.length*sl/2,sl,.28,'','#fff')}
+    if(a<lines.length-1){const nl=wrap(lines[a+1],mw);text(nl,W/2,H/2+ch/2+S*.6+nl.length*sl/2,sl,.4,'','#fff')}
+  }
+  /* progress bar */
+  c.fillStyle='rgba(255,255,255,.14)';c.fillRect(0,H-5,W,5);
+  c.fillStyle='#fff';c.fillRect(0,H-5,W*clamp(t/dur(),0,1),5);
+}
+function frame(ts){
+  const dt=(ts-last)/1000;last=ts;
+  if(playing&&!hasAudio){vt+=dt;if(vt>=dur()){vt=dur();end()}}
+  draw();drawWf();
+  if(document.activeElement!==$('seek'))$('seek').value=now();
+  $('tm').textContent=fmt(now())+' / '+fmt(dur());
+  requestAnimationFrame(frame);
+}
+
+/* ---------- waveform + shift ---------- */
+let peaks=null;
+async function buildPeaks(file){
+  try{
+    const ab=await file.arrayBuffer(),x=new (window.AudioContext||window.webkitAudioContext)();
+    const buf=await x.decodeAudioData(ab);x.close();
+    const d=buf.getChannelData(0),n=Math.floor(buf.duration*100),step=Math.floor(d.length/n);
+    peaks=new Float32Array(n);
+    for(let i=0;i<n;i++){let m=0;for(let j=i*step;j<(i+1)*step;j+=8){const v=Math.abs(d[j]);if(v>m)m=v}peaks[i]=m}
+  }catch(e){peaks=null}
+}
+function drawWf(){
+  const w=$('wf'),g=w.getContext('2d'),W=w.width,H=w.height,t=now(),span=12,t0=t-span/2;
+  g.fillStyle='#0f0d14';g.fillRect(0,0,W,H);
+  if(peaks){g.fillStyle='#6d5a86';for(let x=0;x<W;x+=2){const i=Math.floor((t0+x/W*span)*100);if(i<0||i>=peaks.length)continue;const h=peaks[i]*H*.9;g.fillRect(x,(H-h)/2,1.5,Math.max(h,1))}}
+  g.fillStyle='#f2b266';g.font='12px sans-serif';
+  times.forEach((lt,i)=>{const x=(lt-t0)/span*W;if(x<0||x>W)return;g.fillRect(x,0,2,H);g.fillText(i+1,x+4,12)});
+  g.fillStyle='#fff';g.fillRect(W/2-1,0,2,H);
+}
+$('wf').onclick=e=>{const r=e.target.getBoundingClientRect();seek(now()-6+(e.clientX-r.left)/r.width*12)};
+function shiftAll(d){times=times.map(t=>Math.max(0,+(t+d).toFixed(2)));synced=true;renderList()}
+$('shm').onclick=()=>shiftAll(-.1);$('shp').onclick=()=>shiftAll(.1);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&recorder)$('est').textContent=' Come back to this tab: recording stalls in the background.'});
+
+/* ---------- export ---------- */
+$('exp').onclick=async()=>{
+  if(!window.MediaRecorder){$('est').textContent=' This browser cannot record. Use Chrome or Edge.';return}
+  pause();seek(0);
+  try{await document.fonts.load('700 40px "Noto Serif Bengali"',$('lyr').value);await document.fonts.load('700 40px "Noto Sans Bengali"',$('lyr').value)}catch(e){}
+  let wl=null;try{wl=await navigator.wakeLock.request('screen')}catch(e){}
+  const stream=cv.captureStream(30);
+  if(hasAudio){
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(!msrc){msrc=ac.createMediaElementSource(au);dest=ac.createMediaStreamDestination();msrc.connect(dest);msrc.connect(ac.destination)}
+    await ac.resume();
+    dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
+  }
+  const mime=['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));const ext=mime.startsWith('video/mp4')?'mp4':'webm';
+  const ch=[];const r=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6});
+  r.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};
+  r.onstop=()=>{
+    const blob=new Blob(ch,{type:mime.split(';')[0]}),fn=($('ttl').value.trim()||'lyric-video')+'.'+ext;const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=fn;(async()=>{let d=null;try{d=await claude.use('downloads')}catch(e){}if(d){try{await d.save({filename:fn,data:blob})}catch(e){}}else{document.body.appendChild(a);a.click();a.remove()}})();
+    $('exp').disabled=false;if(wl)wl.release();$('est').textContent=' Done. Saved as .'+ext+(ext==='webm'?' (this browser cannot save MP4 directly; update Chrome)':'');
+  };
+  recorder=r;r.start();$('exp').disabled=true;$('est').innerHTML=' <span class="rec">● Recording…</span> '+fmt(dur())+' total';
+  play();
+};
+
+parse();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "LyricCraft Studio",
+  "description": "Create Bengali, Hindi & English lyric videos with real-time canvas MP4 rendering, timeline audio sync, and visual styling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

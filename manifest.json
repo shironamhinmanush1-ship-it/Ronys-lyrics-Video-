@@ -1,0 +1,10 @@
+{
+  "name": "LyricCraft Studio Lite - MP4 Edition",
+  "short_name": "LyricCraft",
+  "description": "বাংলা ও বহুভাষিক গানের লিরিক ভিডিও ও MP4 এক্সপোর্ট স্টুডিও",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0b10",
+  "theme_color": "#0a0b10",
+  "orientation": "portrait"
+}

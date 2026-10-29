@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center group inside 66dp safe zone (21dp to 87dp) -->
+    <!-- Musical note + Lyric soundwave -->
+    <path
+        android:pathData="M54,26 C41.85,26 32,35.85 32,48 C32,57.17 37.66,64.99 45.71,68.27 L45.71,58.74 C40.85,55.94 37.5,50.77 37.5,44.75 C37.5,35.64 44.89,28.25 54,28.25 C63.11,28.25 70.5,35.64 70.5,44.75 C70.5,50.77 67.15,55.94 62.29,58.74 L62.29,68.27 C70.34,64.99 76,57.17 76,48 C76,35.85 66.15,26 54,26 Z"
+        android:fillColor="#38BDF8" />
+    <path
+        android:pathData="M51,36 L51,61.5 C49.2,60.55 47.16,60 45,60 C38.37,60 33,65.37 33,72 C33,78.63 38.37,84 45,84 C51.63,84 57,78.63 57,72 L57,45 L71,41 L71,34 L51,36 Z"
+        android:fillColor="#EC4899" />
+    <path
+        android:pathData="M37,50 L37,56 M42,46 L42,60 M66,46 L66,60 M71,50 L71,56"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+</vector>

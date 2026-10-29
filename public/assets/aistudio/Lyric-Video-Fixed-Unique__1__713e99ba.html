@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lyric Studio Pro - Fixed Sync V2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@600;800&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#08080e;color:#fff;font-family:'Hind Siliguri',sans-serif;overflow-x:hidden}
+.top{padding:16px 22px;background:linear-gradient(90deg,#12121f,#181828);border-bottom:1px solid #2a2a40;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:10}
+.logo{font-family:'Noto Serif Bengali';font-size:21px;font-weight:800;letter-spacing:.5px}
+.logo span{color:#8b7cff}
+.badge{font-size:9px;background:#8b7cff;padding:3px 8px;border-radius:20px;margin-left:8px;vertical-align:middle;letter-spacing:1px}
+.main{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;padding:18px;max-width:1450px;margin:0 auto}
+@media(max-width:950px){.main{grid-template-columns:1fr}}
+.preview{position:relative;background:#000;border-radius:20px;overflow:hidden;aspect-ratio:16/9;border:1px solid #2a2a4a;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.preview.reels{aspect-ratio:9/16;max-width:430px;margin:0 auto;width:100%}
+canvas#bg{position:absolute;inset:0;width:100%;height:100%}
+.lyricBox{position:relative;z-index:3;text-align:center;padding:28px;max-width:94%;width:920px;transition:.3s}
+.cur{font-family:'Noto Serif Bengali';font-size:clamp(28px,4vw,52px);font-weight:800;line-height:1.35;text-shadow:0 2px 20px rgba(139,124,255,.5),0 0 40px rgba(255,255,255,.3);animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
+.nxt{font-family:'Noto Serif Bengali';margin-top:18px;font-size:clamp(14px,2vw,20px);opacity:.35;transition:.3s}
+.meta{position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;font-size:11px;opacity:.6;z-index:4;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:20px;backdrop-filter:blur(8px)}
+.prog{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#8b7cff,#ff6b9d);z-index:5;transition:width .1s linear}
+.panel{background:linear-gradient(180deg,#171727,#12121e);border:1px solid #2a2a4a;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:16px}
+h3{font-size:11px;letter-spacing:1.2px;opacity:.7;text-transform:uppercase;color:#8b7cff}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:#1e1e36;border:1px solid #2e2e52;color:#fff;padding:10px 15px;border-radius:12px;cursor:pointer;font-size:13px;transition:.2s}
+.btn:hover{background:#2a2a52;transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#8b7cff,#ff6b9d);border:0;color:#fff;font-weight:700}
+.btn.active{background:#fff;color:#000;font-weight:700}
+.input,.textarea{width:100%;background:#0f0f1e;border:1px solid #2a2a4a;border-radius:12px;padding:11px;color:#fff;font-family:'Hind Siliguri';transition:.2s}
+.input:focus,.textarea:focus{border-color:#8b7cff;outline:none;box-shadow:0 0 0 3px rgba(139,124,255,.15)}
+.textarea{min-height:240px;font-family:'Noto Serif Bengali';font-size:15px;resize:vertical;line-height:1.7}
+.list{max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin}
+.item{padding:10px 12px;background:#1a1a32;border:1px solid #2a2a4a;border-radius:10px;display:flex;justify-content:space-between;align-items:center;font-size:13px;cursor:pointer;font-family:'Noto Serif Bengali';transition:.2s}
+.item:hover{background:#23234a}
+.item.active{background:linear-gradient(135deg,#8b7cff,#6a5cff);color:#fff;border-color:#8b7cff;transform:scale(1.02);box-shadow:0 4px 20px rgba(139,124,255,.4)}
+.item .ln{opacity:.5;font-family:'Hind Siliguri';margin-right:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sync-hint{background:#1e1e36;padding:10px 12px;border-radius:10px;font-size:11px;opacity:.8;border-left:3px solid #8b7cff}
+</style>
+</head>
+<body>
+<div class="top">
+<div><div class="logo">Lyric Studio <span>PRO</span><span class="badge">FIXED SYNC • UNIQUE</span></div><div style="font-size:10px;opacity:.5;letter-spacing:1px;margin-top:2px">FIRST LINE BUG FIXED • MANUAL SYNC IMPROVED</div></div>
+<div class="row">
+<button class="btn" onclick="setRatio('yt')">YouTube 16:9</button>
+<button class="btn active" id="reelsBtn" onclick="setRatio('reels')">Reels 9:16</button>
+</div>
+</div>
+<div class="main">
+<div class="preview reels" id="preview">
+<canvas id="bg"></canvas>
+<div class="meta"><span id="cnt">01 / 00</span><span id="tm">0:00 / 0:00</span></div>
+<div class="lyricBox"><div class="cur" id="cur">প্রথম লাইন থেকেই শুরু হবে ✨</div><div class="nxt" id="nxt">এই ভার্সনে ১ম লাইনের বাগ ফিক্স করা হয়েছে</div></div>
+<div class="prog" id="prog"></div>
+</div>
+<div class="panel">
+<div class="sync-hint">✅ FIX: এখন ১ নম্বর লাইন থেকেই লিরিক্স শুরু হবে। আগে idx ক্যালকুলেশনে ভুল ছিল। এখন INTRO=0 হলে সাথে সাথে Line 1 দেখাবে। ম্যানুয়াল সিংক: গান চালিয়ে প্রতিটি লাইনে S চাপুন।</div>
+
+<h3>🎵 Audio</h3>
+<div class="row">
+<label class="btn"><input type="file" id="audFile" accept="audio/*" hidden>📁 Audio Upload</label>
+<button class="btn" id="playBtn">▶️ Play</button>
+<button class="btn" id="pauseBtn">⏸️ Pause</button>
+<button class="btn" onclick="restart()">🔄 Restart from Line 1</button>
+</div>
+<div id="stat" style="font-size:11px;opacity:.7;background:#1a1a32;padding:10px;border-radius:10px;border:1px solid #2a2a4a">READY • Fixed Version • প্রথম লাইন থেকে শুরু</div>
+
+<h3>🎬 Render</h3>
+<div class="row">
+<button class="btn primary" id="renderBtn" onclick="startRender()">● Render & Download Video (WebM)</button>
+<button class="btn" onclick="toggleBG()">🎨 BG Change</button>
+</div>
+<div id="rstat" style="font-size:11px;opacity:.7"></div>
+
+<h3>⚙️ Settings</h3>
+<div class="grid2">
+<div><label style="font-size:11px;opacity:.6">Intro / Instrumental (sec) - 0 রাখলে Line 1 থেকেই শুরু</label><input class="input" id="intro" type="number" value="0" min="0" step="0.1"></div>
+<div><label style="font-size:11px;opacity:.6">Total Duration (sec) - 0 = auto</label><input class="input" id="total" type="number" value="0" min="0" placeholder="Auto"></div>
+<div><label style="font-size:11px;opacity:.6">Font Size</label><input class="input" type="range" id="fsize" min="20" max="80" value="48"></div>
+<div><label style="font-size:11px;opacity:.6">Sync Mode</label><select class="input" id="mode"><option value="equal" selected>Equal (Fixed) - সব লাইন সমান</option><option value="manual">Manual - S চেপে টাইম সেট</option></select></div>
+</div>
+
+<h3>📝 Lyrics - প্রতি লাইন Enter দিয়ে</h3>
+<textarea class="textarea" id="editor" placeholder="এখানে লিরিক্স লিখুন... উদাহরণ:
+ভালোবাসি তোমায়
+হৃদয়ের গভীরে
+তুমি আছো সারাক্ষণ
+
+প্রতিটি লাইন আলাদা Enter এ..."></textarea>
+<div class="row"><button class="btn primary" onclick="apply()">✓ Apply - ১ম লাইন থেকে শুরু</button><button class="btn" onclick="clearAll()">Clear</button><button class="btn" onclick="fixSync()">🔧 Auto Fix Sync</button><span id="info" style="font-size:11px;opacity:.6"></span></div>
+<div class="list" id="list"></div>
+<audio id="audio"></audio>
+<canvas id="cap" style="display:none"></canvas>
+</div>
+</div>
+<script>
+let L=[], INTRO=0, TOTAL=0, PER=0, t=0, playing=false, raf=null, bgMode=0;
+let manualTimes=[];
+let audio=document.getElementById('audio'), cur=document.getElementById('cur'), nxt=document.getElementById('nxt'), cnt=document.getElementById('cnt'), tm=document.getElementById('tm'), prog=document.getElementById('prog'), preview=document.getElementById('preview'), bg=document.getElementById('bg'), ctx=bg.getContext('2d'), cap=document.getElementById('cap'), cctx=cap.getContext('2d');
+let mediaRecorder=null, chunks=[];
+
+function parse(){
+ let txt=document.getElementById('editor').value.trim();
+ if(!txt){ L=[]; manualTimes=[]; document.getElementById('info').textContent='কোনো লিরিক্স নাই'; renderList(); render(0); return; }
+ L=txt.split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+ INTRO=parseFloat(document.getElementById('intro').value)||0;
+ let totalIn=parseFloat(document.getElementById('total').value)||0;
+ if(totalIn>0) TOTAL=totalIn;
+ else if(audio.duration && !isNaN(audio.duration)) TOTAL=audio.duration;
+ else TOTAL= L.length*4.5;
+ if(L.length>0) PER = TOTAL>INTRO ? (TOTAL-INTRO)/L.length : 4.5;
+ else PER=0;
+ manualTimes = L.map((_,i)=> INTRO + i*PER);
+ document.getElementById('info').textContent = L.length+' lines • '+PER.toFixed(2)+'s/line • Total '+Math.floor(TOTAL)+'s • 1st line FIXED';
+ renderList();
+}
+
+function renderList(){
+ let list=document.getElementById('list'); list.innerHTML='';
+ L.forEach((l,i)=>{
+  let sec=manualTimes[i]!==undefined?manualTimes[i]:INTRO+i*PER;
+  let m=Math.floor(sec/60), s=Math.floor(sec%60).toString().padStart(2,'0');
+  let d=document.createElement('div'); d.className='item'; d.id='item-'+i;
+  d.innerHTML=`<span><span class="ln">${String(i+1).padStart(2,'0')}</span>${l}</span><span>${m}:${s}</span>`;
+  d.onclick=()=>{ t=sec+0.01; render(t); if(audio.src) audio.currentTime=t; };
+  list.appendChild(d);
+ });
+}
+
+function apply(){ parse(); t=0; render(0); document.getElementById('stat').textContent='Applied ✓ '+L.length+' lines • এখন ১ম লাইন থেকে শুরু হবে'; if(audio.src && TOTAL===0){ TOTAL=audio.duration; parse(); } }
+function clearAll(){ document.getElementById('editor').value=''; L=[]; manualTimes=[]; parse(); render(0); }
+function fixSync(){ document.getElementById('intro').value=0; parse(); t=0; render(0); document.getElementById('stat').textContent='🔧 Fixed! INTRO 0 করা হয়েছে, এখন Line 1 থেকে শুরু'; }
+
+function resize(){ bg.width=preview.clientWidth*2; bg.height=preview.clientHeight*2; cap.width=bg.width; cap.height=bg.height; }
+let drops=[];
+function initRain(){ resize(); drops=[]; for(let i=0;i<140;i++) drops.push({x:Math.random()*bg.width,y:Math.random()*bg.height,l:10+Math.random()*18,s:0.8+Math.random()*2}); }
+function draw(){
+ ctx.clearRect(0,0,bg.width,bg.height);
+ let grad, W=bg.width, H=bg.height;
+ if(bgMode===0){
+  grad=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W);
+  grad.addColorStop(0,'#1e1e3a'); grad.addColorStop(0.5,'#12122a'); grad.addColorStop(1,'#050510');
+ }else if(bgMode===1){
+  grad=ctx.createRadialGradient(W/2,H/3,0,W/2,H/2,W);
+  grad.addColorStop(0,'#2a1a3a'); grad.addColorStop(1,'#0a0a1a');
+ }else{
+  grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#0f2027'); grad.addColorStop(1,'#2c5364');
+ }
+ ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle=bgMode===0?'rgba(160,140,255,0.25)':'rgba(255,120,180,0.22)'; ctx.lineWidth=1.2;
+ for(let d of drops){ ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x+0.6,d.y+d.l); ctx.stroke(); d.y+=d.s*2; if(d.y>H){d.y=-20; d.x=Math.random()*W;}}
+ if(mediaRecorder && mediaRecorder.state==='recording'){
+  cctx.fillStyle='#000'; cctx.fillRect(0,0,cap.width,cap.height);
+  let g=cctx.createRadialGradient(cap.width/2,cap.height/2,0,cap.width/2,cap.height/2,cap.width);
+  if(bgMode===0){ g.addColorStop(0,'#1e1e3a'); g.addColorStop(1,'#000'); } else { g.addColorStop(0,'#2a1a3a'); g.addColorStop(1,'#000'); }
+  cctx.fillStyle=g; cctx.fillRect(0,0,cap.width,cap.height);
+  cctx.strokeStyle='rgba(200,200,255,0.22)'; for(let d of drops){ cctx.beginPath(); cctx.moveTo(d.x,d.y); cctx.lineTo(d.x+0.6,d.y+d.l); cctx.stroke(); }
+  cctx.fillStyle='#fff'; cctx.textAlign='center'; cctx.shadowColor='rgba(139,124,255,0.7)'; cctx.shadowBlur=25;
+  cctx.font='bold '+Math.floor(cap.width*0.065)+'px Noto Serif Bengali'; cctx.fillText(cur.textContent, cap.width/2, cap.height/2-10);
+  cctx.shadowBlur=0; cctx.globalAlpha=0.35; cctx.font=Math.floor(cap.width*0.032)+'px Noto Serif Bengali'; if(nxt.textContent) cctx.fillText(nxt.textContent, cap.width/2, cap.height/2+70); cctx.globalAlpha=1;
+ }
+ requestAnimationFrame(draw);
+}
+function fmt(s){ if(s<0)s=0; let m=Math.floor(s/60), sc=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sc; }
+
+function getIdx(time){
+ if(L.length===0) return -1;
+ if(time < INTRO -0.05) return -1;
+ let mode=document.getElementById('mode').value;
+ if(mode==='manual' && manualTimes.length===L.length){
+   for(let i=manualTimes.length-1;i>=0;i--){ if(time>=manualTimes[i]) return i; }
+   return 0;
+ }
+ let idx=Math.floor((time-INTRO)/PER);
+ if(idx<0) idx=0;
+ if(idx>=L.length) idx=L.length-1;
+ return idx;
+}
+
+function render(time){
+ tm.textContent=fmt(time)+' / '+fmt(TOTAL||0);
+ let idx=getIdx(time);
+ if(idx===-1){
+  cnt.textContent='00 / '+String(L.length).padStart(2,'0');
+  prog.style.width= (TOTAL? (time/TOTAL*100):0) +'%';
+  if(L.length===0){ cur.textContent='লিরিক্স লিখুন'; nxt.textContent='Apply চাপুন - ১ম লাইন থেকে শুরু হবে'; return; }
+  cur.textContent='♪'; nxt.textContent='Intro • '+(INTRO>time?Math.ceil(INTRO-time)+'s পর শুরু':'');
+  document.querySelectorAll('.item').forEach(el=>el.classList.remove('active')); return;
+ }
+ cnt.textContent=String(idx+1).padStart(2,'0')+' / '+String(L.length||0).padStart(2,'0');
+ prog.style.width= (TOTAL? (time/TOTAL*100):0) +'%';
+ if(L.length===0){ cur.textContent='লিরিক্স লিখুন'; nxt.textContent='Enter দিলে নতুন লাইন'; return; }
+ cur.textContent=L[idx];
+ nxt.textContent=L[idx+1]||'♪ শেষ';
+ document.querySelectorAll('.item').forEach((el,i)=>el.classList.toggle('active', i===idx));
+ let activeEl=document.getElementById('item-'+idx);
+ if(activeEl) activeEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function loop(){ if(!playing) return; if(audio.src && !audio.paused) t=audio.currentTime; else t+=0.016; if(TOTAL && t>TOTAL){ playing=false; document.getElementById('playBtn').textContent='▶️ Play'; return; } render(t); raf=requestAnimationFrame(loop); }
+function play(){ if(L.length===0) parse(); if(L.length===0){ alert('আগে লিরিক্স লিখুন!'); return; } playing=true; document.getElementById('playBtn').textContent='⏸️ Pause'; if(audio.src) audio.play().catch(()=>{}); cancelAnimationFrame(raf); loop(); }
+function pause(){ playing=false; document.getElementById('playBtn').textContent='▶️ Play'; if(audio.src) audio.pause(); cancelAnimationFrame(raf); }
+function restart(){ t=0; if(audio.src) audio.currentTime=0; render(0); play(); }
+document.getElementById('playBtn').onclick=()=> playing? pause(): play();
+document.getElementById('pauseBtn').onclick=()=> pause();
+preview.onclick=(e)=>{ if(e.target.closest('button')) return; playing? pause(): play(); };
+document.getElementById('audFile').onchange=(e)=>{ let f=e.target.files[0]; if(!f) return; audio.src=URL.createObjectURL(f); audio.onloadedmetadata=()=>{ if(!parseFloat(document.getElementById('total').value)) TOTAL=audio.duration; parse(); render(0); document.getElementById('stat').textContent='READY • '+f.name+' • '+Math.floor(audio.duration)+'s • 1st Line Fixed'; }; };
+document.getElementById('fsize').oninput=(e)=>{ cur.style.fontSize=e.target.value+'px'; };
+function setRatio(r){ if(r==='yt'){ preview.classList.remove('reels'); preview.style.aspectRatio='16/9'; preview.style.maxWidth='100%'; } else { preview.classList.add('reels'); preview.style.aspectRatio='9/16'; preview.style.maxWidth='430px'; } resize(); initRain(); }
+function toggleBG(){ bgMode=(bgMode+1)%3; initRain(); }
+document.addEventListener('keydown',(e)=>{
+ if(e.key.toLowerCase()==='s' && playing && L.length>0){
+  let idx=getIdx(t); if(idx>=0 && idx < L.length-1){
+   manualTimes[idx+1]=t;
+   document.getElementById('stat').textContent='Manual Sync: Line '+(idx+2)+' set at '+fmt(t);
+   renderList();
+  }
+ }
+});
+async function startRender(){
+ if(L.length===0){ alert('আগে লিরিক্স লিখুন!'); return; }
+ if(!TOTAL) TOTAL = L.length*4.5;
+ let rstat=document.getElementById('rstat'); rstat.textContent='Rendering... 1st line থেকে শুরু হচ্ছে';
+ chunks=[];
+ let stream=cap.captureStream(30);
+ try{
+  if(audio.src){
+   let actx=new (window.AudioContext||window.webkitAudioContext)();
+   let src=actx.createMediaElementSource(audio);
+   let dest=actx.createMediaStreamDestination();
+   src.connect(dest); src.connect(actx.destination);
+   let comb=new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+   stream=comb;
+  }
+ }catch(e){}
+ let opt={mimeType:'video/webm;codecs=vp9'}; if(!MediaRecorder.isTypeSupported(opt.mimeType)) opt.mimeType='video/webm';
+ mediaRecorder=new MediaRecorder(stream, opt);
+ mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) chunks.push(e.data); };
+ mediaRecorder.onstop=()=>{
+  let blob=new Blob(chunks,{type:'video/webm'}); let url=URL.createObjectURL(blob); let a=document.createElement('a'); a.href=url; a.download='Lyric_Fixed_Unique_'+Date.now()+'.webm'; a.click(); rstat.textContent='✓ Render Complete! '+a.download;
+  mediaRecorder=null;
+ };
+ mediaRecorder.start(100);
+ rstat.textContent='● Recording... '+Math.floor(TOTAL)+'s - 1st line থেকে';
+ t=0; if(audio.src) audio.currentTime=0; play();
+ setTimeout(()=>{ if(mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.stop(); pause(); } }, (TOTAL*1000)+900);
+}
+window.addEventListener('load',()=>{ initRain(); draw(); parse(); render(0); });
+</script>
+</body>
+</html>
